@@ -124,132 +124,81 @@
 
 <script src="rate-mate-bridge.js"></script>
 <script>
-(function(){
-  'use strict';
-  const $ = id => document.getElementById(id);
-  const log = msg => { const d=$('debug'); d.textContent+='\n'+msg; d.scrollTop=d.scrollHeight; };
-  
+// --- 1. Vehicle Selection Logic ---
+window.selectVeh = function(btn, val) {
+    const allChips = document.querySelectorAll('#vehicleSelectors .chip');
+    allChips.forEach(c => {
+        c.style.outline = 'none';
+        c.style.background = 'rgba(255,255,255,0.05)';
+    });
+    btn.style.outline = '2px solid #ffd400';
+    btn.style.background = 'rgba(255,212,0,0.2)';
+    document.getElementById('suggestedVehicle').value = val;
+};
+
+// --- 2. The Waypoint Parser ---
 function extractLocations(text) {
     const s = String(text || '');
-    // Regex for: From [A] to [B] via [C]
     const m = s.match(/from\s+(.+?)\s+to\s+(.+?)(?:\s+via\s+(.+))?$/i);
-    
     if (m) {
-        const A = m[1].trim().toUpperCase();
-        const B = m[2].trim().toUpperCase();
-        // Capture waypoints and join them with commas for the input box
-        const vias = m[3] ? m[3].split(/,|and|via/i).map(x => x.trim().toUpperCase()).filter(Boolean).join(', ') : '';
-        return { from: A, to: B, via: vias };
+        return {
+            from: m[1].trim().toUpperCase(),
+            to: m[2].trim().toUpperCase(),
+            via: m[3] ? m[3].split(/,|and|via/i).map(x => x.trim().toUpperCase()).filter(Boolean).join(', ') : ''
+        };
     }
     return null;
 }
 
-// Update the Parse Button trigger
-function parseText() {
+window.parseText = function() {
     const input = document.getElementById('pcInput').value;
     const data = extractLocations(input);
-    
     if (data) {
-        document.getElementById('pcA').value = data.from.toUpperCase();
-        document.getElementById('pcB').value = data.to.toUpperCase();
-        // Joins multiple waypoints with a comma for the Via box
-        document.getElementById('pcVia').value = data.vias.join(', ').toUpperCase();
-        document.getElementById('status').textContent = 'Text parsed successfully!';
+        document.getElementById('pcA').value = data.from;
+        document.getElementById('pcB').value = data.to;
+        document.getElementById('pcVia').value = data.via;
+        document.getElementById('status').textContent = 'Text parsed! Now click Calculate.';
     } else {
-        document.getElementById('status').textContent = 'Could not find route pattern.';
+        document.getElementById('status').textContent = 'Could not parse text pattern.';
     }
-}
+};
 
-  $('btnParse').onclick = () => {
-    const locs = extractLocations($('snippet').value);
-    if(locs.length >= 2) { $('pcA').value = locs[0]; $('pcB').value = locs[1]; }
-  };
-
-  $('btnCalc').onclick = async () => {
-    const from = $('pcA').value.trim();
-    const to = $('pcB').value.trim();
-    const viaRaw = $('pcVia').value.trim();
+// --- 3. Routing Logic ---
+document.getElementById('btnCalc').onclick = async () => {
+    const from = document.getElementById('pcA').value.trim();
+    const to = document.getElementById('pcB').value.trim();
+    const viaRaw = document.getElementById('pcVia').value.trim();
     
     if(!from || !to) return;
     
-    // Create an array of all locations: [From, ...Vias, To]
     const viaPoints = viaRaw ? viaRaw.split(',').map(p => p.trim()).filter(p => p) : [];
-    const allLocations = [from, ...viaPoints, to];
-    
-    $('status').textContent = 'Geocoding locations...';
+    const allLocs = [from, ...viaPoints, to];
+    document.getElementById('status').textContent = 'Geocoding...';
     
     try {
         const geoPoints = [];
-        for (const loc of allLocations) {
+        for (const loc of allLocs) {
             const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(loc)}`).then(r => r.json());
-            if (res.length > 0) {
-                geoPoints.push({ lat: res[0].lat, lon: res[0].lon, name: res[0].display_name.split(',')[0] });
-            }
+            if (res.length > 0) geoPoints.push({ lat: res[0].lat, lon: res[0].lon, name: res[0].display_name.split(',')[0] });
         }
 
-        // Build OSRM Coordinate String: lon,lat;lon,lat;...
         const coordString = geoPoints.map(g => `${g.lon},${g.lat}`).join(';');
         const route = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordString}?overview=false`).then(r => r.json());
         
         if (route.code !== 'Ok') throw new Error('Routing failed');
 
         const distMiles = (route.routes[0].distance / 1609.344).toFixed(2);
-        $('routeAB').textContent = geoPoints.map(g => g.name).join(' → ');
-        $('distance').textContent = distMiles + ' miles';
-        
-        // Save waypoint count for the bridge (excluding Start and End)
+        document.getElementById('routeAB').textContent = geoPoints.map(g => g.name).join(' → ');
+        document.getElementById('distance').textContent = distMiles + ' miles';
         window.currentWaypointCount = viaPoints.length;
         
-        $('status').textContent = 'Route ready with ' + window.currentWaypointCount + ' stop(s).';
+        document.getElementById('status').textContent = 'Route ready!';
         RateMate.showButton();
     } catch(e) { 
-        $('status').textContent = 'Error: ' + e.message; 
+        document.getElementById('status').textContent = 'Error: ' + e.message; 
     }
 };
 
-  $('btnClear').onclick = () => { window.location.reload(); };
-  
-  window.selectVeh = function(btn, val) {
-    // Reset all chips in this section to their base style
-    const allChips = document.querySelectorAll('#vehicleSelectors .chip');
-    allChips.forEach(c => {
-        c.style.outline = 'none';
-        c.style.background = 'var(--chip)';
-        c.style.color = 'inherit';
-    });
-
-    // Highlight the one you just clicked
-    btn.style.outline = '2px solid var(--brand)';
-    btn.style.background = 'var(--pill)';
-    
-   window.selectVeh = function(btn, val) {
-    // 1. Reset all chips to base dark style
-    const allChips = document.querySelectorAll('#vehicleSelectors .chip');
-    allChips.forEach(c => {
-        c.style.outline = 'none';
-        c.style.background = 'var(--chip)';
-    });
-
-    // 2. Apply Gold highlight to the one you clicked
-    btn.style.outline = '2px solid var(--brand)';
-    btn.style.background = 'var(--pill)';
-    
-    // 3. Update the hidden input that the bridge reads
-    const hiddenInput = document.getElementById('suggestedVehicle');
-    if (hiddenInput) {
-        hiddenInput.value = val;
-    }
-};
-
-  // Ensure LWB is selected when the page first opens
-  window.addEventListener('DOMContentLoaded', () => {
-    const defaultBtn = document.getElementById('defaultVeh');
-    if (defaultBtn) {
-        selectVeh(defaultBtn, 'LWB');
-    }
-  });
-
-})(); // This closes the (function(){ block started at the top
 </script>
 </body>
 </html>
