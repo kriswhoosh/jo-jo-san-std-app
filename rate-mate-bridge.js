@@ -43,27 +43,19 @@ const RateMate = (() => {
       return null;
     }
 
-  function launch(data) {
-      const card = document.getElementById('rateMateCard');
-      const iframe = document.getElementById('rateMateFrame');
-      if (!card || !iframe) return;
+function launch(data) {
+    const card = document.getElementById('rateMateCard');
+    const iframe = document.getElementById('rateMateFrame');
+    if (!card || !iframe) return;
 
-      // Build a direct URL with the data inside it
-      const params = new URLSearchParams({
-          miles: data.miles,
-          vehicle: data.vehicle,
-          pcA: data.pcA,
-          pcB: data.pcB,
-          viaText: data.viaText,
-          waypointCount: data.waypointCount
-      });
+    // This creates the "note" that gets handed to the calculator
+    const url = `${RATE_MATE_URL}?miles=${data.miles}&vehicle=${data.vehicle}&pcA=${data.pcA}&pcB=${data.pcB}&viaText=${encodeURIComponent(data.viaText)}&waypointCount=${data.waypointCount}`;
 
-      card.style.display = 'block';
-      // This loads the page with the data already attached
-      iframe.src = `${RATE_MATE_URL}?${params.toString()}`;
-      
-      card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    card.style.display = 'block';
+    iframe.src = url; // This forces the frame to reload with the new data
+    
+    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 
   return { 
     init, 

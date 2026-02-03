@@ -51,6 +51,29 @@
   </div>
 
   <script>
+    window.addEventListener('DOMContentLoaded', () => {
+    // 1. Look at the URL to see if JO-JO-SAN sent any notes
+    const params = new URLSearchParams(window.location.search);
+    
+    if (params.has('miles')) {
+        console.log("Found data in URL, auto-filling...");
+        
+        // 2. Fill in the Miles and Vehicle boxes
+        document.getElementById('miles').value = params.get('miles');
+        document.getElementById('vehicle').value = params.get('vehicle') || 'LWB';
+        
+        // 3. Update the hidden quote data for your WhatsApp message
+        quoteData.pcA = params.get('pcA') || '';
+        quoteData.pcB = params.get('pcB') || '';
+        quoteData.viaText = params.get('viaText') || '';
+        quoteData.waypointCount = parseInt(params.get('waypointCount')) || 0;
+        quoteData.distTxt = params.get('miles') + ' miles';
+
+        // 4. Trigger the price calculation immediately
+        calculate();
+    }
+});
+
     // At the very start of your script section
 window.onload = () => {
     const params = new URLSearchParams(window.location.search);
@@ -92,50 +115,34 @@ window.addEventListener('message', (e) => {
 });
 
     function calculate() {
-      const v = document.getElementById('vehicle').value;
-      const m = parseFloat(document.getElementById('miles').value) || 0;
-      const stops = quoteData.waypointCount || 0;
+    const m = parseFloat(document.getElementById('miles').value) || 0;
+    const v = document.getElementById('vehicle').value;
+    const stops = quoteData.waypointCount || 0;
 
-      // 1. Waypoint Fee Tiers
-      let stopFee = 15;
-      if (v === "5t" || v === "7.5t") stopFee = 25;function extractLocations(text){
-    const s = String(text || '');
-    // Regex to find "From", "To", and "Via" (with support for multiple 'vias' separated by 'and' or commas)
-    const m = s.match(/from\s+([\s\S]+?)\s+to\s+([\s\S]+?)(?:\s+via\s+([\s\S]+))?$/i);
-    
-    if(m){
-      const A = m[1].trim();
-      const B = m[2].trim();
-      const vias = [];
-      if(m[3]){ 
-        // Splits "Oxford and Reading" or "Oxford, Reading" into individual points
-        vias.push(...m[3].split(/,|and|via/i).map(x => x.trim()).filter(Boolean)); 
-      }
-      return [A, ...vias, B];
+    // 1. Calculate Waypoint Fees
+    let stopFee = 0;
+    if (["SV", "SWB", "LWB", "XLWB"].includes(v)) {
+        stopFee = 15;
+    } else if (["Luton", "5t", "7.5t"].includes(v)) {
+        stopFee = 25;
+    } else if (["18t", "Artic", "3M+"].includes(v)) {
+        stopFee = 40;
     }
 
-    // Fallback: If no "From/To" pattern is found, look for postcodes
-    const pcs = extractPostcodes(s);
-    if(pcs && pcs.length >= 2) return pcs;
-    
-    return [];
+    // 2. Mileage Tariffs
+    let t = 0;
+    if (m >= 20 && m < 40) t = TARIFFS[v][0];
+    else if (m >= 40 && m < 60) t = TARIFFS[v][1];
+    else if (m >= 60 && m < 80) t = TARIFFS[v][2];
+    else if (m >= 80 && m < 100) t = TARIFFS[v][3];
+
+    // 3. Calculation Logic
+    const raw = (m * RATES[v]) + t + (stops * stopFee);
+    const final = Math.round(Math.max(MINS[v], raw));
+
+    document.getElementById('finalPrice').textContent = '£' + final;
+    quoteData.price = final;
   }
-      else if (v === "18t" || v === "Artic" || v === "3M+") stopFee = 40;
-
-      // 2. Mileage Tariffs
-      let t = 0;
-      if (m >= 20 && m < 40) t = TARIFFS[v][0];
-      else if (m >= 40 && m < 60) t = TARIFFS[v][1];
-      else if (m >= 60 && m < 80) t = TARIFFS[v][2];
-      else if (m >= 80 && m < 100) t = TARIFFS[v][3];
-
-      // 3. Calculation Logic
-      const raw = (m * RATES[v]) + t + (stops * stopFee);
-      const final = Math.round(Math.max(MINS[v], raw));
-      
-      document.getElementById('finalPrice').textContent = '£' + final;
-      quoteData.price = final;
-    }
 
     function copyQuote(type) {
   const v = document.getElementById('vehicle').value;
