@@ -129,28 +129,36 @@
   const $ = id => document.getElementById(id);
   const log = msg => { const d=$('debug'); d.textContent+='\n'+msg; d.scrollTop=d.scrollHeight; };
   
-  function extractLocations(text){
+function extractLocations(text) {
     const s = String(text || '');
-    // Regex to find "From", "To", and "Via" (with support for multiple 'vias' separated by 'and' or commas)
-    const m = s.match(/from\s+([\s\S]+?)\s+to\s+([\s\S]+?)(?:\s+via\s+([\s\S]+))?$/i);
+    // Regex for: From [A] to [B] via [C]
+    const m = s.match(/from\s+(.+?)\s+to\s+(.+?)(?:\s+via\s+(.+))?$/i);
     
-    if(m){
-      const A = m[1].trim();
-      const B = m[2].trim();
-      const vias = [];
-      if(m[3]){ 
-        // Splits "Oxford and Reading" or "Oxford, Reading" into individual points
-        vias.push(...m[3].split(/,|and|via/i).map(x => x.trim()).filter(Boolean)); 
-      }
-      return [A, ...vias, B];
+    if (m) {
+        const A = m[1].trim().toUpperCase();
+        const B = m[2].trim().toUpperCase();
+        // Capture waypoints and join them with commas for the input box
+        const vias = m[3] ? m[3].split(/,|and|via/i).map(x => x.trim().toUpperCase()).filter(Boolean).join(', ') : '';
+        return { from: A, to: B, via: vias };
     }
+    return null;
+}
 
-    // Fallback: If no "From/To" pattern is found, look for postcodes
-    const pcs = extractPostcodes(s);
-    if(pcs && pcs.length >= 2) return pcs;
+// Update the Parse Button trigger
+function parseText() {
+    const input = document.getElementById('pcInput').value;
+    const data = extractLocations(input);
     
-    return [];
-  }
+    if (data) {
+        document.getElementById('pcA').value = data.from.toUpperCase();
+        document.getElementById('pcB').value = data.to.toUpperCase();
+        // Joins multiple waypoints with a comma for the Via box
+        document.getElementById('pcVia').value = data.vias.join(', ').toUpperCase();
+        document.getElementById('status').textContent = 'Text parsed successfully!';
+    } else {
+        document.getElementById('status').textContent = 'Could not find route pattern.';
+    }
+}
 
   $('btnParse').onclick = () => {
     const locs = extractLocations($('snippet').value);
@@ -214,12 +222,24 @@
     btn.style.outline = '2px solid var(--brand)';
     btn.style.background = 'var(--pill)';
     
-    // Update the hidden value that goes to RATE-MATE bridge
+   window.selectVeh = function(btn, val) {
+    // 1. Reset all chips to base dark style
+    const allChips = document.querySelectorAll('#vehicleSelectors .chip');
+    allChips.forEach(c => {
+        c.style.outline = 'none';
+        c.style.background = 'var(--chip)';
+    });
+
+    // 2. Apply Gold highlight to the one you clicked
+    btn.style.outline = '2px solid var(--brand)';
+    btn.style.background = 'var(--pill)';
+    
+    // 3. Update the hidden input that the bridge reads
     const hiddenInput = document.getElementById('suggestedVehicle');
     if (hiddenInput) {
         hiddenInput.value = val;
     }
-  };
+};
 
   // Ensure LWB is selected when the page first opens
   window.addEventListener('DOMContentLoaded', () => {
