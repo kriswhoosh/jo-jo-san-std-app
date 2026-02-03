@@ -51,6 +51,27 @@
   </div>
 
   <script>
+    // At the very start of your script section
+window.onload = () => {
+    const params = new URLSearchParams(window.location.search);
+    
+    if (params.has('miles')) {
+        // Fill the fields immediately from the URL
+        document.getElementById('miles').value = params.get('miles');
+        document.getElementById('vehicle').value = params.get('vehicle') || 'LWB';
+        
+        // Update the internal quote data for WhatsApp
+        quoteData.pcA = params.get('pcA') || '';
+        quoteData.pcB = params.get('pcB') || '';
+        quoteData.viaText = params.get('viaText') || '';
+        quoteData.waypointCount = parseInt(params.get('waypointCount')) || 0;
+        quoteData.distTxt = params.get('miles') + ' miles';
+
+        // Run the price calculation
+        calculate();
+    }
+};
+
     const RATES = { "SV":1.10, "SWB":1.25, "LWB":1.35, "XLWB":1.50, "Luton":1.65, "5t":2.50, "7.5t":2.89, "18t":3.85, "Artic":4.85, "3M+":6.00 };
     const MINS = { "SV":50, "SWB":59, "LWB":69, "XLWB":79, "Luton":99, "5t":199, "7.5t":229, "18t":269, "Artic":289, "3M+":299 };
     const TARIFFS = {

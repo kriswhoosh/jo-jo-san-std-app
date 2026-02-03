@@ -43,28 +43,27 @@ const RateMate = (() => {
       return null;
     }
 
-    function launch(data) {
+  function launch(data) {
       const card = document.getElementById('rateMateCard');
       const iframe = document.getElementById('rateMateFrame');
       if (!card || !iframe) return;
 
+      // Build a direct URL with the data inside it
+      const params = new URLSearchParams({
+          miles: data.miles,
+          vehicle: data.vehicle,
+          pcA: data.pcA,
+          pcB: data.pcB,
+          viaText: data.viaText,
+          waypointCount: data.waypointCount
+      });
+
       card.style.display = 'block';
+      // This loads the page with the data already attached
+      iframe.src = `${RATE_MATE_URL}?${params.toString()}`;
       
-      // Set the source if not already there
-      if (!iframe.src.includes('rate-mate.html')) iframe.src = RATE_MATE_URL;
-
-      const send = () => {
-        console.log("Bridge sending data:", data);
-        iframe.contentWindow.postMessage({ type: 'rate-mate', ...data }, '*');
-      };
-
-      // The Three-Step Sync:
-      send(); // 1. Try now
-      iframe.onload = send; // 2. Try when loaded
-      setTimeout(send, 500); // 3. Final safety fallback after 0.5 seconds
-
       card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
+    }
 
   return { 
     init, 
