@@ -26,10 +26,22 @@ const RateMate = (() => {
   }
 
   function extractMiles() {
-    const txt = document.getElementById('distance')?.textContent || '';
-    const match = txt.match(/(\d+\.?\d*)/);
-    return match ? parseFloat(match[1]) : null;
-  }
+      // Grabs the text "171.23 miles" from the JO-JO-SAN results
+      const txt = document.getElementById('distance')?.textContent || '';
+      console.log("Bridge found distance text:", txt);
+      
+      // This regex is now more aggressive to find any number (even with decimals)
+      const match = txt.match(/(\d+\.?\d*)/);
+      
+      if (match) {
+          const miles = parseFloat(match[1]);
+          console.log("Extracted miles for RATE-MATE:", miles);
+          return miles;
+      }
+      
+      console.log("Could not find a number in distance text.");
+      return null;
+    }
 
   function launch(data) {
     const card = document.getElementById('rateMateCard');
