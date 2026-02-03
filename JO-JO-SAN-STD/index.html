@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>JO-JO-SAN</title>
+<link rel="icon" type="image/png" href="jo-jo-san.png">
+<style>
+  :root{ --bg:#1a0033; --card:#2a0a4a; --muted:#c59fd6; --ink:#f7f7f7; --line:#3a2358; --accent:#22c55e; --pill:#1f2937; --chip:#0e1520; --brand:#ffd94a; --pink:#ff7ab6; --bad:#ef4444; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:#f7f7f7;font-family:Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
+  header{margin-bottom:14px;background:#2a0a4a;border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:16px;text-align:center}
+  h1{margin:0;font-size:34px;font-weight:900;color:#ffd94a}
+  .card{background:#151c24;border:1px solid #233141;border-radius:14px;padding:14px;margin:12px 0;color:#ff7ab6;text-align:center}
+  .card h3{color:#ffd94a;margin:0 0 8px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:900px){.row2{grid-template-columns:1fr}}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:left}
+  input[type=text],textarea{width:100%;background:#0e1520;color:#e6eefc;border:1px solid #233141;border-radius:10px;padding:10px 12px;font-size:14px;outline:0;text-align:left}
+  textarea{min-height:140px;resize:vertical}
+  button{padding:10px 14px;border:0;border-radius:10px;font-weight:700;cursor:pointer;color:#ffd94a}
+  .btn{background:#1f2937;color:#ffd94a;border:1px solid #233141}.success{background:#22c55e;color:#06260e}.danger{background:#ef4444;color:#fff2c1}.swap{background:#374151;color:#ffd94a}
+  .stat{background:#0e1520;border:1px solid #233141;border-radius:10px;padding:10px;margin:8px 0}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center}
+  .chip{background:#0e1520;border:1px solid #233141;border-radius:999px;padding:6px 10px;font-size:12px;user-select:none;color:inherit}
+  .chip.a{outline:2px solid #86efac}.chip.b{outline:2px solid #93c5fd}
+  .arrow{opacity:.6;margin:0 4px}
+  .valmsg{font-size:11px;color:#ef9a9a;margin-top:4px;text-align:left}
+  .code-box{background:#0e1520;border:1px solid #233141;border-radius:10px;padding:12px;margin:12px 0;font-family:monospace;font-size:12px;color:#93c5fd;overflow-x:auto}
+  /* Ensure the button classes use your theme variables */
+  .blue {
+      background-color: #2563eb !important; /* Standard Blue */
+      color: var(--brand) !important;
+  }
+
+  .purple {
+      background: #6d28d9 !important; /* Standard Purple */
+      color: var(--brand) !important;
+  }
+
+  /* Ensure buttons have a consistent base style */
+  button {
+      padding: 10px 14px;
+      border: 0;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s;
+  }
+  button:hover {
+      opacity: 0.9;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><h1><strong>JO-JO-SAN</strong></h1><div style="color:#ff7ab6;font-weight:700;margin-top:4px">Another Kriswhoosh Project</div></header>
+
+  <div class="card"><div class="chips" id="routeChips"><span class="hint">↓ Try parsing a route below ↓</span></div></div>
+
+  <div class="row2">
+    <div class="card">
+      <h3>Copy & Paste TEXT area</h3>
+      <textarea id="snippet" placeholder="Examples: BL5 1EE to B77 5PN"></textarea>
+      <div class="actions" style="margin-top:10px;">
+        <button class="success" id="btnParse">Parse Text</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="manualCard">
+    <h3>Manual Fields</h3>
+    <div class="row">
+      <div><label><small>From (A)</small></label><input id="pcA" type="text"></div>
+      <div><label><small>To (B)</small></label><input id="pcB" type="text"></div>
+    </div>
+    
+    <div style="margin-top:8px">
+      <label><small style="color:var(--pink)">Waypoints (Via) - Separate with commas</small></label>
+      <input id="pcVia" type="text" placeholder="e.g., Leeds, Manchester">
+    </div>
+    
+    <div style="margin-top:12px">
+      <label><small>Select Vehicle for RATE-MATE</small></label>
+      <div class="chips" id="vehicleSelectors" style="margin-top:8px; justify-content: flex-start;">
+        <button type="button" class="chip" onclick="selectVeh(this, 'SV')">SV</button>
+        <button type="button" class="chip" onclick="selectVeh(this, 'SWB')">SWB</button>
+        <button type="button" class="chip" onclick="selectVeh(this, 'LWB')" id="defaultVeh">LWB</button>
+        <button type="button" class="chip" onclick="selectVeh(this, 'XLWB')">XLWB</button>
+        <button type="button" class="chip" onclick="selectVeh(this, 'Luton')">Luton</button>
+        <button type="button" class="chip" onclick="selectVeh(this, '5t')">5t</button>
+        <button type="button" class="chip" onclick="selectVeh(this, '7.5t')">7.5t</button>
+        <button type="button" class="chip" onclick="selectVeh(this, '18t')">18t</button>
+        <button type="button" class="chip" onclick="selectVeh(this, 'Artic')">Artic</button>
+        <button type="button" class="chip" onclick="selectVeh(this, '3M+')">3M+</button>
+      </div>
+      <input type="hidden" id="suggestedVehicle" value="LWB">
+    </div>
+    
+    <div style="margin-top:10px" class="actions">
+      <button class="blue" id="btnCalc">Calculate Route</button>
+      <button class="purple" id="btnRateMate" style="display:none">Let's RATE-MATE it</button>
+      <button class="swap" id="btnSwap">Swap A ↔ B</button>
+      <button class="danger" id="btnClear">Clear</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Results</h3>
+    <div id="status" class="hint">Waiting for input…</div>
+    <div class="stat">Route: <span id="routeAB"></span></div>
+    <div class="stat">Distance: <span id="distance"></span></div>
+    <div class="stat">Drive Time: <span id="duration"></span></div>
+  </div>
+
+  <div class="card" id="rateMateCard" style="display:none;background:#1a0033;border:2px solid #6d28d9">
+    <h3 style="color:#ff4d9f">RATE-MATE</h3>
+    <iframe id="rateMateFrame" style="width:100%;height:650px;border:none;border-radius:10px"></iframe>
+  </div>
+
+  <details class="card"><summary>Debug</summary><pre id="debug">Ready.</pre></details>
+</div>
+
+<script>
+// --- 1. Vehicle Selection Logic ---
+window.selectVeh = function(btn, val) {
+    const allChips = document.querySelectorAll('#vehicleSelectors .chip');
+    allChips.forEach(c => {
+        c.style.outline = 'none';
+        c.style.background = 'rgba(255,255,255,0.05)';
+    });
+    btn.style.outline = '2px solid #ffd400';
+    btn.style.background = 'rgba(255,212,0,0.2)';
+    document.getElementById('suggestedVehicle').value = val;
+};
+
+// --- 2. The Waypoint Parser ---
+function extractLocations(text) {
+    const s = String(text || '');
+    const m = s.match(/from\s+(.+?)\s+to\s+(.+?)(?:\s+via\s+(.+))?$/i);
+    if (m) {
+        return {
+            from: m[1].trim().toUpperCase(),
+            to: m[2].trim().toUpperCase(),
+            via: m[3] ? m[3].split(/,|and|via/i).map(x => x.trim().toUpperCase()).filter(Boolean).join(', ') : ''
+        };
+    }
+    return null;
+}
+
+window.parseText = function() {
+    const input = document.getElementById('pcInput').value;
+    const data = extractLocations(input);
+    if (data) {
+        document.getElementById('pcA').value = data.from;
+        document.getElementById('pcB').value = data.to;
+        document.getElementById('pcVia').value = data.via;
+        document.getElementById('status').textContent = 'Text parsed! Now click Calculate.';
+    } else {
+        document.getElementById('status').textContent = 'Could not parse text pattern.';
+    }
+};
+
+// --- 3. Routing Logic ---
+document.getElementById('btnCalc').onclick = async () => {
+    const from = document.getElementById('pcA').value.trim();
+    const to = document.getElementById('pcB').value.trim();
+    const viaRaw = document.getElementById('pcVia').value.trim();
+    
+    if(!from || !to) return;
+    
+    const viaPoints = viaRaw ? viaRaw.split(',').map(p => p.trim()).filter(p => p) : [];
+    const allLocs = [from, ...viaPoints, to];
+    document.getElementById('status').textContent = 'Geocoding...';
+    
+    try {
+        const geoPoints = [];
+        for (const loc of allLocs) {
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(loc)}`).then(r => r.json());
+            if (res.length > 0) geoPoints.push({ lat: res[0].lat, lon: res[0].lon, name: res[0].display_name.split(',')[0] });
+        }
+
+        const coordString = geoPoints.map(g => `${g.lon},${g.lat}`).join(';');
+        const route = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordString}?overview=false`).then(r => r.json());
+        
+        if (route.code !== 'Ok') throw new Error('Routing failed');
+
+        const distMiles = (route.routes[0].distance / 1609.344).toFixed(2);
+        document.getElementById('routeAB').textContent = geoPoints.map(g => g.name).join(' → ');
+        document.getElementById('distance').textContent = distMiles + ' miles';
+        window.currentWaypointCount = viaPoints.length;
+        
+        document.getElementById('status').textContent = 'Route ready!';
+        document.getElementById('status').textContent = 'Route ready!';
+        
+        // Added safety check to prevent the "undefined" error
+        if (typeof RateMate !== 'undefined') {
+            RateMate.showButton();
+        } else {
+            console.log("Bridge not ready yet, retrying...");
+            setTimeout(() => { if(typeof RateMate !== 'undefined') RateMate.showButton(); }, 500);
+        }
+    } catch(e) { 
+        document.getElementById('status').textContent = 'Error: ' + e.message; 
+    }
+};
+
+</script>
+  <script src="rate-mate-bridge.js"></script>
+</body>
+</html>
