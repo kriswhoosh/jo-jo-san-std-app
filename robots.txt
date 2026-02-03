@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>JO-JO-SAN GOLD - Preview</title>
+<style>
+  :root{ --bg:#1a0033; --card:#2a0a4a; --muted:#c59fd6; --ink:#f7f7f7; --line:#3a2358; --accent:#22c55e; --pill:#1f2937; --chip:#0e1520; --brand:#ffd94a; --pink:#ff7ab6; --bad:#ef4444; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:#f7f7f7;font-family:Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
+  header{margin-bottom:14px;background:#2a0a4a;border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:16px;text-align:center}
+  h1{margin:0;font-size:34px;font-weight:900;color:#ffd94a}
+  .card{background:#151c24;border:1px solid #233141;border-radius:14px;padding:14px;margin:12px 0;color:#ff7ab6;text-align:center}
+  .card h3{color:#ffd94a;margin:0 0 8px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:900px){.row2{grid-template-columns:1fr}}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:left}
+  input[type=text],textarea{width:100%;background:#0e1520;color:#e6eefc;border:1px solid #233141;border-radius:10px;padding:10px 12px;font-size:14px;outline:0;text-align:left}
+  textarea{min-height:140px;resize:vertical}
+  button{padding:10px 14px;border:0;border-radius:10px;font-weight:700;cursor:pointer;color:#ffd94a}
+  .btn{background:#1f2937;color:#ffd94a;border:1px solid #233141}.success{background:#22c55e;color:#06260e}.danger{background:#ef4444;color:#fff2c1}.swap{background:#374151;color:#ffd94a}
+  .pill{display:inline-block;background:#1f2937;border:1px solid #233141;border-radius:999px;padding:6px 10px;margin-right:6px;font-size:12px;color:inherit}
+  .hint{color:#c59fd6;font-size:12px}
+  .stat{background:#0e1520;border:1px solid #233141;border-radius:10px;padding:10px;margin:8px 0}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center}
+  .chip{background:#0e1520;border:1px solid #233141;border-radius:999px;padding:6px 10px;font-size:12px;user-select:none;color:inherit}
+  .chip.a{outline:2px solid #86efac}.chip.b{outline:2px solid #93c5fd}.chip.via{opacity:.9}
+  .chip.rt{background:#1f2937;border-style:dashed;cursor:pointer}
+  .arrow{opacity:.6;margin:0 4px}
+  .invalid{border-color:#ef4444 !important;box-shadow:0 0 0 2px rgba(239,68,68,.2)}
+  .valmsg{font-size:11px;color:#ef9a9a;margin-top:4px;text-align:left}
+  a{color:#93c5fd}
+  .exports{display:flex;gap:8px;flex-wrap:wrap;text-align:left}
+  .card .actions{text-align:center;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+  .blue{background:#2563eb;color:var(--brand)}
+  .purple{background:#6d28d9;color:#ffd94a}
+  .code-box{background:#0e1520;border:1px solid #233141;border-radius:10px;padding:12px;margin:12px 0;font-family:monospace;font-size:12px;color:#93c5fd;overflow-x:auto}
+</style>
+</head>
+<body data-app-version="v1.9-modular">
+<div class="wrap">
+  <header><h1><strong>JO-JO-SAN</strong> GOLD</h1><div style="color:#ff7ab6;font-weight:700;margin-top:4px">Module Architecture Preview</div></header>
+
+  <div class="card"><div class="chips" id="routeChips"><span class="hint">↓ Try parsing a route below ↓</span></div></div>
+
+  <div class="row2">
+    <div class="card">
+      <h3>Quick Test</h3>
+      <textarea id="snippet" placeholder="Examples:&#10;BL5 1EE&#10;B77 5PN&#10;&#10;From Birmingham to Edinburgh&#10;From Manchester to York via Leeds"></textarea>
+      <div class="actions" style="margin-top:10px;">
+        <button class="success" id="btnParse">Parse Text</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Module Info</h3>
+      <div style="text-align:left;font-size:12px;line-height:1.6">
+        <div><strong style="color:#ffd94a">Files:</strong></div>
+        <div>• index.html (main)</div>
+        <div>• rate-mate-bridge.js</div>
+        <div>• rateMateCard.html</div>
+        <div style="margin-top:8px"><strong style="color:#ffd94a">Architecture:</strong></div>
+        <div>✓ Lean separation</div>
+        <div>✓ Lazy loading</div>
+        <div>✓ Clean API calls</div>
+        <div>✓ Auto-init</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="manualCard">
+    <h3>Manual Fields</h3>
+    <div class="row">
+      <div><label><small>From (A)</small></label><input id="pcA" type="text" placeholder="e.g. BL5 1EE or Birmingham"><div id="valA" class="valmsg"></div></div>
+      <div><label><small>To (B)</small></label><input id="pcB" type="text" placeholder="e.g. B77 5PN or Edinburgh"><div id="valB" class="valmsg"></div></div>
+    </div>
+    <div style="margin-top:8px"><label><small>Suggested Vehicle</small></label><input id="suggestedVehicle" type="text" placeholder="e.g. LWB, 7.5t or SV"></div>
+    <div style="margin-top:10px" class="actions">
+      <button class="blue" id="btnCalc">Calculate Route</button>
+      <button class="purple" id="btnRateMate" style="display:none">Let's RATE-MATE it</button>
+      <button class="swap" id="btnSwap">Swap A ↔ B</button>
+      <button class="danger" id="btnClear">Clear</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Results</h3>
+    <div id="status" class="hint">Waiting for input…</div>
+    <div class="stat">Route: <span id="routeAB"></span></div>
+    <div class="stat">Distance: <span id="distance"></span></div>
+    <div class="stat">Estimated Drive Time: <span id="duration"></span></div>
+  </div>
+
+  <div class="card" id="rateMateCard" style="display:none;background:#1a0033;border:2px solid #6d28d9">
+    <h3 style="color:#ff4d9f">Rate This Job with RATE-MATE</h3>
+    <iframe id="rateMateFrame" style="width:100%;height:600px;border:none;border-radius:10px"></iframe>
+  </div>
+
+  <div class="card">
+    <h3>Integration Code</h3>
+    <div class="code-box">// In index.html after route calculation:<br/>lastResult = {pcs, distance_m, duration_s};<br/><span style="color:#22c55e">RateMate.showButton();</span><br/><br/>// User clicks button<br/>RateMate.launch({miles, vehicle});</div>
+  </div>
+
+  <details class="card"><summary>Debug</summary><pre id="debug">Ready. Module architecture initialized.</pre></details>
+</div>
+
+<script src="rate-mate-bridge.js"></script>
+<script>
+(function(){
+  'use strict';
+  function $(id){return document.getElementById(id);}
+  function log(msg){var d=$('debug');d.textContent+='\n'+msg;d.scrollTop=d.scrollHeight;}
+  function setStatus(msg){$('status').textContent=msg;}
+
+  // ===== LOCATION EXTRACTION =====
+  function extractLocations(text){
+    const s = String(text || '');
+    const m = s.match(/from\s+([\s\S]+?)\s+to\s+([\s\S]+?)(?:\s+via\s+([\s\S]+))?$/i);
+    if(m){
+      const A = m[1].trim().replace(/\s+/g, ' ');
+      const B = m[2].trim().replace(/\s+/g, ' ');
+      const vias = [];
+      if(m[3]){ vias.push(...m[3].split(/,|and|via/i).map(x => x.trim()).filter(Boolean)); }
+      return [A, ...vias, B];
+    }
+    const pcs = extractPostcodes(s);
+    if(pcs && pcs.length >= 2) return pcs;
+    const lines = s.split(/\n+/).map(x => x.trim()).filter(Boolean);
+    if(lines.length >= 2 && lines.join(' ').length < 120) return lines.slice(0, 2);
+    return [];
+  }
+
+  function extractPostcodes(text){
+    const out = [];
+    const re = /([A-Z]{1,2}\d[A-Z\d]?)\s*(\d[A-Z]{2})/gi;
+    let m;
+    while((m = re.exec(String(text)))){
+      out.push((m[1].toUpperCase() + ' ' + m[2].toUpperCase()).trim());
+    }
+    return out;
+  }
+
+  // ===== RENDERING =====
+  function renderChips(pcs){
+    const el = $('routeChips');
+    el.innerHTML = '';
+    if(!pcs || pcs.length === 0){
+      el.innerHTML = '<span class="hint">Route summary will appear here after parsing.</span>';
+      return;
+    }
+    const chip = (txt, klass) => {
+      const s = document.createElement('span');
+      s.className = 'chip ' + (klass || '');
+      s.textContent = txt;
+      el.appendChild(s);
+    };
+    const arrow = () => {
+      const s = document.createElement('span');
+      s.className = 'arrow';
+      s.textContent = '→';
+      el.appendChild(s);
+    };
+    chip(pcs[0], 'a');
+    for(let m = 1; m < pcs.length - 1; m++){ arrow(); chip(pcs[m], 'via'); }
+    if(pcs.length > 1){ arrow(); chip(pcs[pcs.length - 1], 'b'); }
+  }
+
+  function setDetected(list){
+    renderChips(list);
+  }
+
+  function populateManual(pcs){
+    $('pcA').value = pcs[0] || '';
+    $('pcB').value = pcs.length > 1 ? pcs[pcs.length - 1] : '';
+  }
+
+  $('snippet').addEventListener('input', function(){ setDetected(extractLocations($('snippet').value)); });
+  $('btnParse').onclick = function(){
+    const pcs = extractLocations($('snippet').value);
+    setDetected(pcs);
+    if(pcs.length >= 1){ populateManual(pcs); }
+    $('status').textContent = pcs.length < 2 ? 'Found fewer than two locations — add or correct manually.' : ('Parsed ' + pcs.length + ' location(s). Fields filled.');
+  };
+
+  function httpGetJSON(url, done){
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onreadystatechange = function(){
+      if(xhr.readyState === 4){
+        let data = null;
+        try{ data = JSON.parse(xhr.responseText || '{}'); }catch(e){ return done(e, null, xhr.status); }
+        return done(null, data, xhr.status);
+      }
+    };
+    xhr.onerror = function(){ done(new Error('Network error')); };
+    xhr.send();
+  }
+
+  function geocodeFlexible(pc, cb){
+    const query = String(pc || '').trim();
+    if(!query) return cb(new Error('Empty location'));
+    const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=gb&q=' + encodeURIComponent(query);
+    httpGetJSON(url, function(err, data, status){
+      if(!err && status === 200 && data && data.length){
+        const n = data[0];
+        const norm = (n.display_name && n.display_name.split(',')[0]) || query;
+        return cb(null, {lat: parseFloat(n.lat), lon: parseFloat(n.lon), norm: norm});
+      }
+      cb(new Error('Location not found: ' + query));
+    });
+  }
+
+  function route(points, cb){
+    const coords = [];
+    for(let idx = 0; idx < points.length; idx++){ coords.push(points[idx].lon + ',' + points[idx].lat); }
+    const url = 'https://router.project-osrm.org/route/v1/driving/' + coords.join(';') + '?overview=false&alternatives=false&steps=false';
+    httpGetJSON(url, function(err, data, status){
+      if(err) return cb(err);
+      if(status !== 200 || !data || data.code !== 'Ok' || !data.routes || !data.routes.length) return cb(new Error('No route found'));
+      cb(null, data.routes[0]);
+    });
+  }
+
+  $('btnSwap').onclick = function(){ const a = $('pcA').value, b = $('pcB').value; $('pcA').value = b; $('pcB').value = a; };
+  $('btnClear').onclick = function(){ $('snippet').value = ''; $('pcA').value = ''; $('pcB').value = ''; $('suggestedVehicle').value = ''; $('routeChips').innerHTML = '<span class="hint">Route summary will appear here after parsing.</span>'; setStatus('Cleared.'); RateMate.hideButton(); log('Cleared.'); };
+
+  let lastResult = null;
+
+  $('btnCalc').onclick = function(){
+    const from = $('pcA').value.trim();
+    const to = $('pcB').value.trim();
+    if(!from || !to){ setStatus('Please provide both A and B (postcode or place).'); return; }
+    const pcs = [from, to];
+    lastResult = null;
+    $('routeAB').textContent = '';
+    $('distance').textContent = '';
+    $('duration').textContent = '';
+    setStatus('Geocoding ' + pcs.length + ' location(s)…');
+    renderChips(pcs);
+    
+    let idx = 0;
+    const geo = [];
+    (function next(){
+      if(idx >= pcs.length) return afterGeo();
+      geocodeFlexible(pcs[idx], function(err, g){
+        if(err){ setStatus('❌ ' + err.message); log(err.message); return; }
+        geo.push(g);
+        idx++;
+        next();
+      });
+    })();
+    
+    function afterGeo(){
+      setStatus('Routing…');
+      route(geo, function(err, r){
+        if(err){ setStatus('❌ ' + err.message); log(err.message); return; }
+        const dist = r.distance;
+        const dur = r.duration;
+        const normList = geo.map(g => g.norm);
+        $('routeAB').textContent = normList.join(' → ');
+        $('distance').textContent = (dist / 1609.344).toFixed(1) + ' miles · ' + (dist / 1000).toFixed(1) + ' km';
+        const s = Math.round(dur);
+        const h = Math.floor(s / 3600);
+        const m = Math.round((s % 3600) / 60);
+        $('duration').textContent = h ? (m ? (h + ' hr ' + m + ' min') : (h + ' hr')) : (m + ' min');
+        setStatus('Done. Click "Let\'s RATE-MATE it" to get pricing.');
+        lastResult = {pcs: normList, distance_m: dist, duration_s: dur};
+        RateMate.showButton();
+        log('Route calculated. RATE-MATE button shown.');
+      });
+    }
+  };
+
+  log('JO-JO-SAN v1.9 Preview initialized');
+})();
+</script>
+</body>
+</html>
