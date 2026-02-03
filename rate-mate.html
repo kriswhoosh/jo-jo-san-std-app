@@ -59,7 +59,16 @@
       "Artic":[88,66,55,44], "3M+":[109,82,68,54.5]
     };
 
-    let quoteData = { pcA: '', pcB: '', distTxt: '', price: 0, waypointCount: 0 };
+    // Update your quoteData object at the top of the script
+let quoteData = { pcA: '', pcB: '', distTxt: '', price: 0, waypointCount: 0, viaText: '' };
+
+window.addEventListener('message', (e) => {
+  if (e.data.type === 'rate-mate') {
+    // ... existing lines ...
+    quoteData.viaText = e.data.viaText || ''; // New line to capture postcodes
+    calculate();
+  }
+});
 
     function calculate() {
       const v = document.getElementById('vehicle').value;
@@ -68,7 +77,28 @@
 
       // 1. Waypoint Fee Tiers
       let stopFee = 15;
-      if (v === "5t" || v === "7.5t") stopFee = 25;
+      if (v === "5t" || v === "7.5t") stopFee = 25;function extractLocations(text){
+    const s = String(text || '');
+    // Regex to find "From", "To", and "Via" (with support for multiple 'vias' separated by 'and' or commas)
+    const m = s.match(/from\s+([\s\S]+?)\s+to\s+([\s\S]+?)(?:\s+via\s+([\s\S]+))?$/i);
+    
+    if(m){
+      const A = m[1].trim();
+      const B = m[2].trim();
+      const vias = [];
+      if(m[3]){ 
+        // Splits "Oxford and Reading" or "Oxford, Reading" into individual points
+        vias.push(...m[3].split(/,|and|via/i).map(x => x.trim()).filter(Boolean)); 
+      }
+      return [A, ...vias, B];
+    }
+
+    // Fallback: If no "From/To" pattern is found, look for postcodes
+    const pcs = extractPostcodes(s);
+    if(pcs && pcs.length >= 2) return pcs;
+    
+    return [];
+  }
       else if (v === "18t" || v === "Artic" || v === "3M+") stopFee = 40;
 
       // 2. Mileage Tariffs
@@ -87,25 +117,30 @@
     }
 
     function copyQuote(type) {
-      const v = document.getElementById('vehicle').value;
-      const isWA = type === 'whatsapp';
-      const b = isWA ? '*' : ''; 
-      
-      const stopText = quoteData.waypointCount > 0 ? ` (inc. ${quoteData.waypointCount} stop[s])` : '';
-      
-      const text = `Thank you for your enquiry\n\n` +
-                   `We would like to offer the following\n\n` +
-                   `From ${b}${quoteData.pcA}${b} to ${b}${quoteData.pcB}${b} (${quoteData.distTxt})${stopText}\n` +
-                   `Based on ${b}${v}${b} (min)\n` +
-                   `Price = ${b}£${quoteData.price}${b} + vat\n\n` +
-                   `⭐ Please let me know ⭐`;
+  const v = document.getElementById('vehicle').value;
+  const isWA = type === 'whatsapp';
+  const b = isWA ? '*' : ''; 
+  
+  // Format the waypoint section: (inc. 2 stop[s] (B71 4EX, B69 2HG))
+  let stopDetails = '';
+  if (quoteData.waypointCount > 0) {
+    const pcods = quoteData.viaText ? ` (${quoteData.viaText})` : '';
+    stopDetails = ` (inc. ${quoteData.waypointCount} stop[s]${pcods})`;
+  }
+  
+  const text = `Thank you for your enquiry\n\n` +
+               `We would like to offer the following\n\n` +
+               `From ${b}${quoteData.pcA}${b} to ${b}${quoteData.pcB}${b} (${quoteData.distTxt})${stopDetails}\n` +
+               `Based on ${b}${v}${b} (min)\n` +
+               `Price = ${b}£${quoteData.price}${b} + vat\n\n` +
+               `⭐ Please let me know ⭐`;
 
-      navigator.clipboard.writeText(text).then(() => {
-        const status = document.getElementById('copyStatus');
-        status.textContent = 'Quote copied to clipboard!';
-        setTimeout(() => status.textContent = '', 2000);
-      });
-    }
+  navigator.clipboard.writeText(text).then(() => {
+    const status = document.getElementById('copyStatus');
+    status.textContent = 'Quote copied to clipboard!';
+    setTimeout(() => status.textContent = '', 2000);
+  });
+}
 
     window.addEventListener('message', (e) => {
       if (e.data.type === 'rate-mate') {

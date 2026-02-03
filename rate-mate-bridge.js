@@ -18,7 +18,13 @@ const RateMate = (() => {
       const distTxt = document.getElementById('distance')?.textContent || '';
       const waypointCount = window.currentWaypointCount || 0;
       
-      launch({ miles, vehicle, pcA, pcB, distTxt, waypointCount });
+      const viaText = document.getElementById('pcVia')?.value || '';
+      const waypointCount = window.currentWaypointCount || 0;
+
+      const viaText = document.getElementById('pcVia')?.value || '';
+      const waypointCount = window.currentWaypointCount || 0;
+
+      launch({ miles, vehicle, pcA, pcB, distTxt, waypointCount, viaText });
     });
     initialized = true;
   }
