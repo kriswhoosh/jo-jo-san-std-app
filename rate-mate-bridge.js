@@ -49,14 +49,27 @@ const RateMate = (() => {
     if (!card || !iframe) return;
 
     card.style.display = 'block';
-    if (!iframe.src.includes('rate-mate.html')) iframe.src = RATE_MATE_URL;
+    
+    // Ensure the source is set
+    if (!iframe.src.includes('rate-mate.html')) {
+        iframe.src = RATE_MATE_URL;
+    }
 
     const send = () => {
+      console.log("Bridge sending data to RATE-MATE:", data);
       iframe.contentWindow.postMessage({ type: 'rate-mate', ...data }, '*');
     };
 
-    iframe.onload = send;
+    // The Double-Tap:
+    // 1. Try sending immediately if it's already loaded
     send(); 
+    
+    // 2. Try sending when the iframe finishes loading
+    iframe.onload = send;
+    
+    // 3. Try one final time after 500ms as a fallback
+    setTimeout(send, 500);
+
     card.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
