@@ -43,34 +43,27 @@ const RateMate = (() => {
       return null;
     }
 
-  function launch(data) {
-    const card = document.getElementById('rateMateCard');
-    const iframe = document.getElementById('rateMateFrame');
-    if (!card || !iframe) return;
+    function launch(data) {
+      const card = document.getElementById('rateMateCard');
+      const iframe = document.getElementById('rateMateFrame');
+      if (!card || !iframe) return;
 
-    card.style.display = 'block';
-    
-    // Ensure the source is set
-    if (!iframe.src.includes('rate-mate.html')) {
-        iframe.src = RATE_MATE_URL;
-    }
+      card.style.display = 'block';
+      
+      // Set the source if not already there
+      if (!iframe.src.includes('rate-mate.html')) iframe.src = RATE_MATE_URL;
 
-    const send = () => {
-      console.log("Bridge sending data to RATE-MATE:", data);
-      iframe.contentWindow.postMessage({ type: 'rate-mate', ...data }, '*');
-    };
+      const send = () => {
+        console.log("Bridge sending data:", data);
+        iframe.contentWindow.postMessage({ type: 'rate-mate', ...data }, '*');
+      };
 
-    // The Double-Tap:
-    // 1. Try sending immediately if it's already loaded
-    send(); 
-    
-    // 2. Try sending when the iframe finishes loading
-    iframe.onload = send;
-    
-    // 3. Try one final time after 500ms as a fallback
-    setTimeout(send, 500);
+      // The Three-Step Sync:
+      send(); // 1. Try now
+      iframe.onload = send; // 2. Try when loaded
+      setTimeout(send, 500); // 3. Final safety fallback after 0.5 seconds
 
-    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      card.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   return { 

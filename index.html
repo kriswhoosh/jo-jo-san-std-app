@@ -188,7 +188,7 @@ document.getElementById('btnCalc').onclick = async () => {
 
         const distMiles = (route.routes[0].distance / 1609.344).toFixed(2);
         document.getElementById('routeAB').textContent = geoPoints.map(g => g.name).join(' → ');
-        document.getElementById('distance').textContent = distMiles;
+        document.getElementById('distance').textContent = distMiles + ' miles';
         window.currentWaypointCount = viaPoints.length;
         
         document.getElementById('status').textContent = 'Route ready!';
