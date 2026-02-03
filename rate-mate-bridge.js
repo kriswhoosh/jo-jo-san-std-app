@@ -9,16 +9,13 @@ const RateMate = (() => {
       e.preventDefault();
       const miles = extractMiles();
       
-      let vehInput = document.getElementById('suggestedVehicle')?.value.trim().toUpperCase();
-      let vehicle = vehInput || 'LWB';
-      if (vehicle.includes("3M") || vehicle.includes("MEGA")) vehicle = "3M+";
-      
-      // CAPTURE DATA FOR QUOTE
+      // 1. Updated to grab the value from the HIDDEN input updated by your chips
+      const hiddenVeh = document.getElementById('suggestedVehicle');
+      let vehicle = hiddenVeh ? hiddenVeh.value : 'LWB';
+
       const pcA = document.getElementById('pcA')?.value || '';
       const pcB = document.getElementById('pcB')?.value || '';
       const distTxt = document.getElementById('distance')?.textContent || '';
-      
-      // NEW: Grab the waypoint count we saved during calculation
       const waypointCount = window.currentWaypointCount || 0;
       
       launch({ miles, vehicle, pcA, pcB, distTxt, waypointCount });
