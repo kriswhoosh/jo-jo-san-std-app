@@ -75,15 +75,26 @@
       <div><label><small>From (A)</small></label><input id="pcA" type="text"></div>
       <div><label><small>To (B)</small></label><input id="pcB" type="text"></div>
     </div>
+    
     <div style="margin-top:8px">
-      <label><small>Waypoints (Via) - Separate with commas</small></label>
+      <label><small style="color:var(--pink)">Waypoints (Via) - Separate with commas</small></label>
       <input id="pcVia" type="text" placeholder="e.g., Leeds, Manchester">
     </div>
     
     <div style="margin-top:12px">
       <label><small>Select Vehicle for RATE-MATE</small></label>
       <div class="chips" id="vehicleSelectors" style="margin-top:8px; justify-content: flex-start;">
-        </div>
+        <button type="button" class="chip" onclick="selectVeh(this, 'SV')">SV</button>
+        <button type="button" class="chip" onclick="selectVeh(this, 'SWB')">SWB</button>
+        <button type="button" class="chip" onclick="selectVeh(this, 'LWB')" id="defaultVeh">LWB</button>
+        <button type="button" class="chip" onclick="selectVeh(this, 'XLWB')">XLWB</button>
+        <button type="button" class="chip" onclick="selectVeh(this, 'Luton')">Luton</button>
+        <button type="button" class="chip" onclick="selectVeh(this, '5t')">5t</button>
+        <button type="button" class="chip" onclick="selectVeh(this, '7.5t')">7.5t</button>
+        <button type="button" class="chip" onclick="selectVeh(this, '18t')">18t</button>
+        <button type="button" class="chip" onclick="selectVeh(this, 'Artic')">Artic</button>
+        <button type="button" class="chip" onclick="selectVeh(this, '3M+')">3M+</button>
+      </div>
       <input type="hidden" id="suggestedVehicle" value="LWB">
     </div>
     
