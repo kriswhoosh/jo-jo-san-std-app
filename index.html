@@ -70,27 +70,23 @@
   </div>
 
   <div class="card" id="manualCard">
-    <h3>Manual Postcode Fields</h3>
+    <h3>Manual Fields</h3>
     <div class="row">
       <div><label><small>From (A)</small></label><input id="pcA" type="text"></div>
       <div><label><small>To (B)</small></label><input id="pcB" type="text"></div>
     </div>
+    <div style="margin-top:8px">
+      <label><small>Waypoints (Via) - Separate with commas</small></label>
+      <input id="pcVia" type="text" placeholder="e.g., Leeds, Manchester">
+    </div>
+    
     <div style="margin-top:12px">
-  <label><small>Select Vehicle for RATE-MATE</small></label>
-  <div class="chips" id="vehicleSelectors" style="margin-top:8px; justify-content: flex-start;">
-    <button type="button" class="chip" onclick="selectVeh(this, 'SV')">SV</button>
-    <button type="button" class="chip" onclick="selectVeh(this, 'SWB')">SWB</button>
-    <button type="button" class="chip" onclick="selectVeh(this, 'LWB')" id="defaultVeh">LWB</button>
-    <button type="button" class="chip" onclick="selectVeh(this, 'XLWB')">XLWB</button>
-    <button type="button" class="chip" onclick="selectVeh(this, 'Luton')">Luton</button>
-    <button type="button" class="chip" onclick="selectVeh(this, '5t')">5t</button>
-    <button type="button" class="chip" onclick="selectVeh(this, '7.5t')">7.5t</button>
-    <button type="button" class="chip" onclick="selectVeh(this, '18t')">18t</button>
-    <button type="button" class="chip" onclick="selectVeh(this, 'Artic')">Artic</button>
-    <button type="button" class="chip" onclick="selectVeh(this, '3M+')">3M+</button>
-</div>
-<input type="hidden" id="suggestedVehicle" value="LWB">
-</div>
+      <label><small>Select Vehicle for RATE-MATE</small></label>
+      <div class="chips" id="vehicleSelectors" style="margin-top:8px; justify-content: flex-start;">
+        </div>
+      <input type="hidden" id="suggestedVehicle" value="LWB">
+    </div>
+    
     <div style="margin-top:10px" class="actions">
       <button class="blue" id="btnCalc">Calculate Route</button>
       <button class="purple" id="btnRateMate" style="display:none">Let's RATE-MATE it</button>
@@ -124,12 +120,25 @@
   
   function extractLocations(text){
     const s = String(text || '');
+    // Regex to find "From", "To", and "Via" (with support for multiple 'vias' separated by 'and' or commas)
     const m = s.match(/from\s+([\s\S]+?)\s+to\s+([\s\S]+?)(?:\s+via\s+([\s\S]+))?$/i);
-    if(m) return [m[1].trim(), m[2].trim()];
-    const re = /([A-Z]{1,2}\d[A-Z\d]?)\s*(\d[A-Z]{2})/gi;
-    let out = [], match;
-    while((match = re.exec(s))) out.push(match[0].toUpperCase());
-    return out;
+    
+    if(m){
+      const A = m[1].trim();
+      const B = m[2].trim();
+      const vias = [];
+      if(m[3]){ 
+        // Splits "Oxford and Reading" or "Oxford, Reading" into individual points
+        vias.push(...m[3].split(/,|and|via/i).map(x => x.trim()).filter(Boolean)); 
+      }
+      return [A, ...vias, B];
+    }
+
+    // Fallback: If no "From/To" pattern is found, look for postcodes
+    const pcs = extractPostcodes(s);
+    if(pcs && pcs.length >= 2) return pcs;
+    
+    return [];
   }
 
   $('btnParse').onclick = () => {
@@ -140,23 +149,44 @@
   $('btnCalc').onclick = async () => {
     const from = $('pcA').value.trim();
     const to = $('pcB').value.trim();
+    const viaRaw = $('pcVia').value.trim();
+    
     if(!from || !to) return;
     
-    $('status').textContent = 'Calculating...';
+    // Create an array of all locations: [From, ...Vias, To]
+    const viaPoints = viaRaw ? viaRaw.split(',').map(p => p.trim()).filter(p => p) : [];
+    const allLocations = [from, ...viaPoints, to];
+    
+    $('status').textContent = 'Geocoding locations...';
+    
     try {
-      const geoA = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(from)}`).then(r => r.json());
-      const geoB = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(to)}`).then(r => r.json());
-      
-      const route = await fetch(`https://router.project-osrm.org/route/v1/driving/${geoA[0].lon},${geoA[0].lat};${geoB[0].lon},${geoB[0].lat}?overview=false`).then(r => r.json());
-      
-      const distMiles = (route.routes[0].distance / 1609.344).toFixed(2);
-      $('routeAB').textContent = `${geoA[0].display_name.split(',')[0]} → ${geoB[0].display_name.split(',')[0]}`;
-      $('distance').textContent = distMiles + ' miles';
-      
-      $('status').textContent = 'Route ready.';
-      RateMate.showButton();
-    } catch(e) { $('status').textContent = 'Error calculating route.'; }
-  };
+        const geoPoints = [];
+        for (const loc of allLocations) {
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(loc)}`).then(r => r.json());
+            if (res.length > 0) {
+                geoPoints.push({ lat: res[0].lat, lon: res[0].lon, name: res[0].display_name.split(',')[0] });
+            }
+        }
+
+        // Build OSRM Coordinate String: lon,lat;lon,lat;...
+        const coordString = geoPoints.map(g => `${g.lon},${g.lat}`).join(';');
+        const route = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordString}?overview=false`).then(r => r.json());
+        
+        if (route.code !== 'Ok') throw new Error('Routing failed');
+
+        const distMiles = (route.routes[0].distance / 1609.344).toFixed(2);
+        $('routeAB').textContent = geoPoints.map(g => g.name).join(' → ');
+        $('distance').textContent = distMiles + ' miles';
+        
+        // Save waypoint count for the bridge (excluding Start and End)
+        window.currentWaypointCount = viaPoints.length;
+        
+        $('status').textContent = 'Route ready with ' + window.currentWaypointCount + ' stop(s).';
+        RateMate.showButton();
+    } catch(e) { 
+        $('status').textContent = 'Error: ' + e.message; 
+    }
+};
 
   $('btnClear').onclick = () => { window.location.reload(); };
   

@@ -9,14 +9,19 @@ const RateMate = (() => {
       e.preventDefault();
       const miles = extractMiles();
       
-      // Grab the value set by our new checkbox/chip UI
-      let vehicle = document.getElementById('suggestedVehicle')?.value || 'LWB';
-
+      let vehInput = document.getElementById('suggestedVehicle')?.value.trim().toUpperCase();
+      let vehicle = vehInput || 'LWB';
+      if (vehicle.includes("3M") || vehicle.includes("MEGA")) vehicle = "3M+";
+      
+      // CAPTURE DATA FOR QUOTE
       const pcA = document.getElementById('pcA')?.value || '';
       const pcB = document.getElementById('pcB')?.value || '';
       const distTxt = document.getElementById('distance')?.textContent || '';
       
-      launch({ miles, vehicle, pcA, pcB, distTxt });
+      // NEW: Grab the waypoint count we saved during calculation
+      const waypointCount = window.currentWaypointCount || 0;
+      
+      launch({ miles, vehicle, pcA, pcB, distTxt, waypointCount });
     });
     initialized = true;
   }
