@@ -144,14 +144,27 @@ window.addEventListener('message', (e) => {
 
     window.addEventListener('message', (e) => {
       if (e.data.type === 'rate-mate') {
-        if (e.data.miles) document.getElementById('miles').value = e.data.miles;
-        if (e.data.vehicle && RATES[e.data.vehicle]) document.getElementById('vehicle').value = e.data.vehicle;
+        console.log("RATE-MATE received data:", e.data);
+
+        // 1. Force the Mileage update
+        if (e.data.miles) {
+            const milesInput = document.getElementById('miles');
+            milesInput.value = e.data.miles;
+        }
+
+        // 2. Force the Vehicle update
+        if (e.data.vehicle && RATES[e.data.vehicle]) {
+            document.getElementById('vehicle').value = e.data.vehicle;
+        }
         
+        // 3. Sync all other quote data
         quoteData.pcA = e.data.pcA || '';
         quoteData.pcB = e.data.pcB || '';
         quoteData.distTxt = e.data.distTxt || '';
         quoteData.waypointCount = e.data.waypointCount || 0;
+        quoteData.viaText = e.data.viaText || '';
         
+        // 4. Run the calculation immediately
         calculate();
       }
     });
