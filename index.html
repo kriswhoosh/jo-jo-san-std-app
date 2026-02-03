@@ -122,7 +122,6 @@
   <details class="card"><summary>Debug</summary><pre id="debug">Ready.</pre></details>
 </div>
 
-<script src="rate-mate-bridge.js"></script>
 <script>
 // --- 1. Vehicle Selection Logic ---
 window.selectVeh = function(btn, val) {
@@ -193,12 +192,21 @@ document.getElementById('btnCalc').onclick = async () => {
         window.currentWaypointCount = viaPoints.length;
         
         document.getElementById('status').textContent = 'Route ready!';
-        RateMate.showButton();
+        document.getElementById('status').textContent = 'Route ready!';
+        
+        // Added safety check to prevent the "undefined" error
+        if (typeof RateMate !== 'undefined') {
+            RateMate.showButton();
+        } else {
+            console.log("Bridge not ready yet, retrying...");
+            setTimeout(() => { if(typeof RateMate !== 'undefined') RateMate.showButton(); }, 500);
+        }
     } catch(e) { 
         document.getElementById('status').textContent = 'Error: ' + e.message; 
     }
 };
 
 </script>
+  <script src="rate-mate-bridge.js"></script>
 </body>
 </html>

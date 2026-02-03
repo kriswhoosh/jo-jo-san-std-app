@@ -7,23 +7,19 @@ const RateMate = (() => {
     if (!btn || initialized) return;
     btn.addEventListener('click', (e) => {
       e.preventDefault();
-      const miles = extractMiles();
       
-      // 1. Updated to grab the value from the HIDDEN input updated by your chips
+      const miles = extractMiles();
       const hiddenVeh = document.getElementById('suggestedVehicle');
-      let vehicle = hiddenVeh ? hiddenVeh.value : 'LWB';
-
+      const vehicle = hiddenVeh ? hiddenVeh.value : 'LWB';
+      
       const pcA = document.getElementById('pcA')?.value || '';
       const pcB = document.getElementById('pcB')?.value || '';
       const distTxt = document.getElementById('distance')?.textContent || '';
+      
+      // Capturing waypoints and text for the final quote
+      const viaText = document.getElementById('pcVia')?.value || '';
       const waypointCount = window.currentWaypointCount || 0;
       
-      const viaText = document.getElementById('pcVia')?.value || '';
-      const waypointCount = window.currentWaypointCount || 0;
-
-      const viaText = document.getElementById('pcVia')?.value || '';
-      const waypointCount = window.currentWaypointCount || 0;
-
       launch({ miles, vehicle, pcA, pcB, distTxt, waypointCount, viaText });
     });
     initialized = true;
@@ -54,7 +50,12 @@ const RateMate = (() => {
 
   return { 
     init, 
-    showButton: () => { document.getElementById('btnRateMate').style.display = 'inline-block'; } 
+    showButton: () => { 
+        const btn = document.getElementById('btnRateMate');
+        if(btn) btn.style.display = 'inline-block'; 
+    } 
   };
 })();
+
+// Initialize the bridge
 RateMate.init();
